@@ -6,7 +6,7 @@
       "providers": ["php"],
       "phases": {
         "setup": {
-          "nixPkgs": ["php82"]
+          "nixPkgs": ["php83"]
         },
         "install": {
           "cmds": ["composer install --no-dev --optimize-autoloader"]
