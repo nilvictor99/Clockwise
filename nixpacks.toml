@@ -1,9 +1,9 @@
 [phases.setup]
-nixPkgs = ['php82', 'php82Extensions.bcmath', 'php82Extensions.intl', 'php82Extensions.zip', 'nodejs', 'yarn']
-cmds = ['composer install --optimize-autoloader --no-dev --no-interaction']
+  nixPkgs = ['php82', 'nodejs_20', 'npm']  # Incluye PHP 8.2 y Node.js 20 con npm
+  aptPkgs = ['postgresql-client']  # Opcional: para comandos psql si usas PostgreSQL
 
 [phases.build]
-cmds = ['npm install', 'npm run build']
+  cmds = ['composer install --no-dev --optimize-autoloader', 'npm install', 'npm run build', 'php artisan optimize', 'php artisan config:cache', 'php artisan route:cache', 'php artisan view:cache', 'php artisan migrate --force']
 
-[variables]
-NIXPACKS_METADATA = "php,laravel"
+[start]
+  cmd = 'php artisan serve --host=0.0.0.0 --port=8080'  # Inicia el servidor Laravel
