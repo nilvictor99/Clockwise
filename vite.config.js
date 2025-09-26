@@ -23,12 +23,15 @@ export default defineConfig({
         https: process.env.VITE_DEV_SERVER_HTTPS === 'true',
     },
     build: {
-        manifest: true,
+        manifest: 'manifest.json', // Genera en public/build/
+        outDir: 'public/build',
+        assetsDir: 'assets',
+        base: process.env.APP_URL ? `${process.env.APP_URL}/build/` : '/build/', // HTTPS
         rollupOptions: {
-            output: {
-                manualChunks: undefined,
-            }
-        }
+        output: {
+            manualChunks: undefined,
+        },
+        },
     },
     // Better cache handling for Docker environments
     cacheDir: '/tmp/.vite',
