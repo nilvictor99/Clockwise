@@ -1,0 +1,28 @@
+[phases.setup]
+nixPkg = [
+  "php.withExtensions(all)",
+  "nodejs_20",  # Node.js 20 (compatible con Vite 7.x)
+  "npm-10_x",   # npm 10 (compatible con Node.js 20)
+  "nginx",
+  "libmysqlclient",
+  "phpPackages.composer"
+]
+
+[phases.install]
+cmds = [
+  "mkdir -p /var/log/nginx",
+  "mkdir -p /var/cache/nginx",
+  "composer install --ignore-platform-reqs",
+  "npm ci"
+]
+
+[phases.build]
+cmds = ["npm run build"]
+
+[phases.start]
+cmds = [
+  "node /assets/scripts/prestart.mjs /assets/nginx.template.conf /nginx.conf && (php-fpm -y /assets/php-fpm.conf & nginx -c /nginx.conf)"
+]
+
+[variables]
+APP_ENV = "production"
