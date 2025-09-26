@@ -1,27 +1,29 @@
 #!/bin/bash
-# Script de build para Laravel + Node en Railpack (corrige EBUSY)
-set -e  # Sale si hay error
+# Script de build para Laravel + Node en Railpack (corrige EBUSY en .vite cache)
+set -e  # Exit on error
 
-# Limpia caché de Vite/npm para evitar locks
-rm -rf node_modules/.vite
-rm -rf node_modules/.cache
+# Clean npm cache safely to avoid EBUSY
+npm cache clean --force
 
-# Instala dependencias PHP
+# Optional: Attempt to clean .vite and .cache, ignore if busy
+rm -rf node_modules/.vite node_modules/.cache /app/node_modules 2>/dev/null || true
+
+# Install PHP dependencies
 composer install --no-dev --optimize-autoloader --no-interaction
 
-# Instala dependencias Node y compila assets
-npm ci --force --omit=dev  # Forza instalación limpia, omite dev deps
-npm run build  # Compila CSS/JS (vite build)
+# Install Node dependencies and compile assets
+npm ci --force --omit=dev  # Clean install, force to override locks, omit dev deps for prod
+npm run build  # Compile styles/CSS/JS (vite build)
 
-# Optimizaciones Laravel
+# Laravel optimizations
 php artisan optimize:clear
 php artisan config:cache
 php artisan event:cache
 php artisan route:cache
 php artisan view:cache
 
-# Migraciones (seguro en prod)
+# Migrations (safe for prod)
 php artisan migrate --force
 
-# Enlace storage (para archivos públicos)
+# Storage link for public assets
 php artisan storage:link
