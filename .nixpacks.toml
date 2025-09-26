@@ -1,18 +1,25 @@
 [phases.setup]
-nixPkg = [
-  "php.withExtensions(all)",
-  "nodejs_20",  # Node.js 20 (compatible con Vite 7.x)
+nixPkgs = [
+  "php82",  # Ajusta a la versión de PHP que usa tu proyecto (por ejemplo, php81 para PHP 8.1)
+  "php82Extensions.bcmath",
+  "php82Extensions.intl",
+  "php82Extensions.zip",
+  "php82Extensions.pdo_pgsql",  # Necesario para PostgreSQL, según el error
+  "php82Extensions.opcache",
+  "php82Extensions.sodium",  # Incluido en tu configuración original
+  "nodejs_20",  # Node.js 20 (compatible con Vite)
   "npm-10_x",   # npm 10 (compatible con Node.js 20)
   "nginx",
-  "libmysqlclient",
+  "libmysqlclient",  # Si usas MySQL, mantenlo; si usas PostgreSQL, puedes quitarlo
   "phpPackages.composer"
 ]
+aptPkgs = ["libzip-dev", "zip", "unzip"]  # Dependencias del sistema para la extensión zip
 
 [phases.install]
 cmds = [
   "mkdir -p /var/log/nginx",
   "mkdir -p /var/cache/nginx",
-  "composer install --ignore-platform-reqs",
+  "composer install --optimize-autoloader --no-scripts --no-interaction",  # Eliminado --ignore-platform-reqs
   "npm ci"
 ]
 
