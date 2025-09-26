@@ -19,4 +19,15 @@ export default defineConfig({
         }),
         i18n(),
     ],
+    server: {
+        https: process.env.VITE_DEV_SERVER_HTTPS === 'true',
+    },
+    build: {
+        manifest: true,
+        rollupOptions: {
+            output: {
+                manualChunks: undefined,
+            }
+        }
+    }
 });
