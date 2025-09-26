@@ -2,18 +2,41 @@
 # Script de build para Laravel + Node en Railpack (corrige EBUSY en .vite cache)
 set -e  # Exit on error
 
-# Clean npm cache safely to avoid EBUSY
-npm cache clean --force
+# Function to safely clean directories
+safe_clean() {
+    local dir="$1"
+    if [ -d "$dir" ]; then
+        echo "Cleaning $dir..."
+        # Try multiple approaches to clean the directory
+        (rm -rf "$dir" 2>/dev/null) || \
+        (find "$dir" -type f -delete 2>/dev/null && find "$dir" -type d -empty -delete 2>/dev/null) || \
+        (chmod -R 755 "$dir" 2>/dev/null && rm -rf "$dir" 2>/dev/null) || \
+        echo "Warning: Could not fully clean $dir, continuing..."
+    fi
+}
 
-# Optional: Attempt to clean .vite and .cache, ignore if busy
-rm -rf node_modules/.vite node_modules/.cache /app/node_modules 2>/dev/null || true
+# Clean npm cache with better error handling
+echo "Cleaning npm cache..."
+npm cache clean --force 2>/dev/null || echo "Warning: npm cache clean failed, continuing..."
 
-# Install PHP dependencies
+# Clean problematic cache directories more safely
+safe_clean "node_modules/.vite"
+safe_clean "node_modules/.cache" 
+safe_clean "/app/node_modules/.vite"
+safe_clean "/app/node_modules/.cache"
+
+# Install PHP dependencies first
+echo "Installing PHP dependencies..."
 composer install --no-dev --optimize-autoloader --no-interaction
 
-# Install Node dependencies and compile assets
-npm ci --force --omit=dev  # Clean install, force to override locks, omit dev deps for prod
-npm run build  # Compile styles/CSS/JS (vite build)
+# Clean install of Node dependencies with better error handling  
+echo "Installing Node.js dependencies..."
+npm ci --omit=dev --no-optional --prefer-offline 2>/dev/null || \
+npm install --omit=dev --no-optional --prefer-offline
+
+# Build assets
+echo "Building assets..."
+npm run build
 
 # Laravel optimizations
 php artisan optimize:clear

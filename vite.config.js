@@ -29,5 +29,10 @@ export default defineConfig({
                 manualChunks: undefined,
             }
         }
+    },
+    // Better cache handling for Docker environments
+    cacheDir: '/tmp/.vite',
+    optimizeDeps: {
+        force: true
     }
 });
