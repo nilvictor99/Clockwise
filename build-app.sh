@@ -1,5 +1,5 @@
 #!/bin/bash
-# Script de build para Laravel + Node en Railpack (corrige EBUSY en .vite cache)
+# Script de build para Laravel + Node en Railpack (corrige EBUSY y Rollup issues)
 set -e  # Exit on error
 
 # Function to safely clean directories
@@ -29,16 +29,23 @@ safe_clean "/app/node_modules/.cache"
 echo "Installing PHP dependencies..."
 composer install --no-dev --optimize-autoloader --no-interaction
 
-# Clean install of Node dependencies with better error handling  
-echo "Installing Node.js dependencies..."
-npm ci --omit=dev --no-optional --prefer-offline 2>/dev/null || \
-npm install --omit=dev --no-optional --prefer-offline
+# Fix npm/rollup native dependencies issue
+echo "Fixing npm dependencies for build environment..."
 
-# Build assets
+# Remove problematic files that can cause native module issues
+rm -f package-lock.json 2>/dev/null || true
+safe_clean "node_modules"
+
+# Install Node dependencies with proper native module handling
+echo "Installing Node.js dependencies (fresh install)..."
+npm install --prefer-offline --no-audit --no-fund
+
+# Build assets with better error handling
 echo "Building assets..."
 npm run build
 
 # Laravel optimizations
+echo "Optimizing Laravel..."
 php artisan optimize:clear
 php artisan config:cache
 php artisan event:cache
@@ -46,7 +53,11 @@ php artisan route:cache
 php artisan view:cache
 
 # Migrations (safe for prod)
+echo "Running migrations..."
 php artisan migrate --force
 
 # Storage link for public assets
+echo "Creating storage link..."
 php artisan storage:link
+
+echo "Build completed successfully!"
