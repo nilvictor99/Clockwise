@@ -1,5 +1,5 @@
 #!/bin/bash
-# Script de build para Laravel en Railpack (compila estilos y evita DB)
+# Script de build para Laravel en Railpack (optimizado para Railway)
 set -e  # Exit on error
 
 echo "🚀 Iniciando proceso de build..."
@@ -30,6 +30,7 @@ safe_clean "node_modules/.vite"
 safe_clean "node_modules/.cache"
 safe_clean "/app/node_modules/.vite"
 safe_clean "/app/node_modules/.cache"
+safe_clean "bootstrap/cache/*.php"
 
 # Instalar dependencias PHP
 echo "📦 Instalando dependencias PHP..."
@@ -39,6 +40,7 @@ composer install --no-dev --optimize-autoloader --no-interaction
 echo "⚙️ Configurando npm..."
 npm config set cache /tmp/.npm
 npm config set prefer-offline true
+npm config set legacy-peer-deps true
 
 # Instalar dependencias Node y compilar assets con mejor manejo de errores
 echo "📦 Instalando dependencias Node.js..."
@@ -46,7 +48,9 @@ export ROLLUP_SKIP_NATIVE=true
 export ADBLOCK=true
 export DISABLE_OPENCOLLECTIVE=true
 
-npm ci --no-audit --no-fund || npm install --no-audit --no-fund
+# Intentar npm ci primero, fallback a npm install si falla
+npm ci --no-audit --no-fund || npm install --no-audit --no-fund --legacy-peer-deps
+
 echo "🔨 Compilando assets..."
 npm run build
 
@@ -62,15 +66,21 @@ if [ ! -f public/build/manifest.json ]; then
     exit 1
 fi
 
-# Optimizaciones de Laravel
+# Optimizaciones de Laravel (sin operaciones de DB)
 echo "⚡ Optimizando Laravel..."
-php artisan optimize:clear
+# Limpiar cachés específicos que no requieren DB
+php artisan config:clear
+php artisan route:clear
+php artisan view:clear
+php artisan event:clear
+
+# Generar cachés (esto es seguro durante build)
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 
 # Enlaces simbólicos de storage
 echo "🔗 Creando enlaces simbólicos..."
-php artisan storage:link
+php artisan storage:link || true
 
 echo "✅ Build completado exitosamente!"
