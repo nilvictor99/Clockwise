@@ -40,14 +40,17 @@
 
     const showQrModal = ref(false);
     const qrCode = ref('');
+    const userName = ref('');
     const showScanner = ref(false);
     const perPage = ref(props.perPage ?? 5);
 
     const generateQr = async () => {
-        const { qrCode: code } = await fetch(route('generate'), {
+        const response = await fetch(route('generate'), {
             headers: { 'X-Requested-With': 'XMLHttpRequest' },
-        }).then(r => r.json());
-        qrCode.value = code;
+        });
+        const { name, qrCode: qrCodeData } = await response.json();
+        qrCode.value = qrCodeData;
+        userName.value = name;
         showQrModal.value = true;
     };
 
@@ -359,6 +362,7 @@
         <ModalQrGenerate
             :show="showQrModal"
             :qr-code="qrCode"
+            :userName="userName"
             @close="showQrModal = false"
         />
         <ModalQrScanner :show="showScanner" @close="showScanner = false" />

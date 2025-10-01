@@ -52,7 +52,7 @@ class TimesheetController extends Controller
     {
         $user = $this->userService->getBasicAuthUserWithQr();
         if ($user->qr_code) {
-            return ['qrCode' => $user->qr_code];
+            return ['qrCode' => $user->qr_code, 'name' => $user->name];
         }
         $result = $this->timesheetService->generateQrCode($this->userService->getAuthUser());
         $this->userService->uploadQrCode($user->id, $result);

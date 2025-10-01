@@ -48,7 +48,7 @@ class TimesheetRepository extends BaseRepository
         ];
         $qrCode = $this->qrGeneratorService->generate($data, $options);
 
-        return ['qrCode' => $qrCode];
+        return ['qrCode' => $qrCode, 'name' => $data['name'] ?? ''];
     }
 
     public function getDataById($id)
