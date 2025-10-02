@@ -2,7 +2,10 @@ import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
 import vue from '@vitejs/plugin-vue';
 import i18n from 'laravel-vue-i18n/vite';
-const assetPath = 'assets/';
+
+const isVittclasDomain = process.env.APP_URL && process.env.APP_URL.includes('vittclas');
+const assetPath = isVittclasDomain ? 'build/assets/' : 'assets/';
+
 
 export default defineConfig({
     plugins: [
