@@ -19,4 +19,5 @@ export default defineConfig({
         }),
         i18n(),
     ],
+    base: process.env.APP_URL || '/', 
 });
