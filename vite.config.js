@@ -19,13 +19,13 @@ export default defineConfig({
         }),
         i18n(),
     ],
-    base: process.env.APP_URL ? new URL(process.env.APP_URL).pathname : '/',
+    base: '/',
     build: {
         rollupOptions: {
             output: {
-                assetFileNames: 'assets/[name]-[hash][extname]',
-                chunkFileNames: 'assets/[name]-[hash].js',
-                entryFileNames: 'assets/[name]-[hash].js',
+                assetFileNames: 'build/assets/[name]-[hash][extname]',
+                chunkFileNames: 'build/assets/[name]-[hash].js',
+                entryFileNames: 'build/assets/[name]-[hash].js',
             },
         },
     },
