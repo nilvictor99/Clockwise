@@ -3,8 +3,8 @@ import laravel from 'laravel-vite-plugin';
 import vue from '@vitejs/plugin-vue';
 import i18n from 'laravel-vue-i18n/vite';
 
-const isVittclasDomain = process.env.APP_URL && process.env.APP_URL.includes('vittclas');
-const assetPath = isVittclasDomain ? 'build/assets/' : 'assets/';
+const baseUrl = process.env.APP_URL || '/';
+const assetPath = 'assets/'; 
 
 
 export default defineConfig({
@@ -23,7 +23,7 @@ export default defineConfig({
         }),
         i18n(),
     ],
-    base: '/',
+    base: baseUrl,
     build: {
         rollupOptions: {
             output: {
