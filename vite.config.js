@@ -3,10 +3,6 @@ import laravel from 'laravel-vite-plugin';
 import vue from '@vitejs/plugin-vue';
 import i18n from 'laravel-vue-i18n/vite';
 
-const baseUrl = process.env.APP_URL || '/';
-const assetPath = 'assets/';
-
-
 export default defineConfig({
     plugins: [
         laravel({
@@ -23,13 +19,13 @@ export default defineConfig({
         }),
         i18n(),
     ],
-    base: baseUrl,
+    base: '/', //de esta forma funciona para dominios personalizados pero no para railway
     build: {
         rollupOptions: {
             output: {
-                assetFileNames: `${assetPath}[name]-[hash][extname]`,
-                chunkFileNames: `${assetPath}[name]-[hash].js`,
-                entryFileNames: `${assetPath}[name]-[hash].js`,
+                assetFileNames: 'build/assets/[name]-[hash][extname]',
+                chunkFileNames: 'build/assets/[name]-[hash].js',
+                entryFileNames: 'build/assets/[name]-[hash].js',
             },
         },
     },
