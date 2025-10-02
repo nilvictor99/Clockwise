@@ -4,7 +4,7 @@ import vue from '@vitejs/plugin-vue';
 import i18n from 'laravel-vue-i18n/vite';
 
 const baseUrl = process.env.APP_URL || '/';
-const assetPath = 'assets/'; 
+const assetPath = 'build/assets/';
 
 
 export default defineConfig({
