@@ -19,5 +19,14 @@ export default defineConfig({
         }),
         i18n(),
     ],
-    base: '/assets/',
+    base: '/',
+    build: {
+        rollupOptions: {
+            output: {
+                assetFileNames: 'build/assets/[name]-[hash][extname]',
+                chunkFileNames: 'build/assets/[name]-[hash].js',
+                entryFileNames: 'build/assets/[name]-[hash].js',
+            },
+        },
+    },
 });
