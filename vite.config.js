@@ -19,5 +19,5 @@ export default defineConfig({
         }),
         i18n(),
     ],
-    base: '/',
+    base: '/assets/',
 });
