@@ -20,7 +20,7 @@ class AddressFromCoordinatesService
 
     private const BIGDATACLOUD_BASE_URL = 'https://api.bigdatacloud.net/data/reverse-geocode-client';
 
-    public function getAddress(float $lat, float $lon, array $options = []): ?string
+    public function getAddressComplete(float $lat, float $lon, array $options = []): ?string
     {
         $methods = [
             'getAddressFromNominatim',
@@ -58,6 +58,37 @@ class AddressFromCoordinatesService
         return implode(', ', array_unique($addressParts));
     }
 
+    public function getAddressFast(float $lat, float $lon, array $options = []): ?string
+    {
+        $methods = [
+            'getAddressFromNominatim',
+            'getAddressFromPhoton',
+            'getAddressFromPhotonDonsomhong',
+            'getAddressFromPhotonMarsmathis',
+            'getAddressFromPhotonKllswitch',
+            'getAddressFromBigdatacloud',
+        ];
+
+        foreach ($methods as $method) {
+            $result = $this->$method($lat, $lon, $options);
+            if ($result) {
+                $merged = $result;
+                $order = ['full', 'name', 'street', 'city', 'district', 'county', 'locality', 'region', 'principal_subdivision', 'state', 'country', 'postcode', 'postal'];
+                $addressParts = [];
+                foreach ($order as $key) {
+                    if (isset($merged[$key])) {
+                        $addressParts[] = $merged[$key];
+                    }
+                }
+                if (! empty($addressParts)) {
+                    return implode(', ', array_unique($addressParts));
+                }
+            }
+        }
+
+        return null;
+    }
+
     private function getAddressFromNominatim(float $lat, float $lon, array $options = []): ?array
     {
         $params = array_merge([
@@ -81,7 +112,7 @@ class AddressFromCoordinatesService
         }
     }
 
-    private function getAddressFromPhoton(float $lat, float $lon, array $options = []): ?string
+    private function getAddressFromPhoton(float $lat, float $lon, array $options = []): ?array
     {
         $params = array_merge([
             'lat' => $lat,
@@ -95,10 +126,16 @@ class AddressFromCoordinatesService
                 $data = $response->json();
                 if (! empty($data['features'])) {
                     $properties = $data['features'][0]['properties'];
-                    $keys = ['name', 'street', 'city', 'district', 'state', 'country', 'postcode'];
-                    $addressParts = array_filter(array_map(fn ($key) => $properties[$key] ?? null, $keys), fn ($val) => ! empty($val));
 
-                    return implode(', ', $addressParts);
+                    return [
+                        'name' => $properties['name'] ?? null,
+                        'street' => $properties['street'] ?? null,
+                        'city' => $properties['city'] ?? null,
+                        'district' => $properties['district'] ?? null,
+                        'state' => $properties['state'] ?? null,
+                        'country' => $properties['country'] ?? null,
+                        'postcode' => $properties['postcode'] ?? null,
+                    ];
                 }
             }
 
@@ -108,7 +145,7 @@ class AddressFromCoordinatesService
         }
     }
 
-    private function getAddressFromPhotonDonsomhong(float $lat, float $lon, array $options = []): ?string
+    private function getAddressFromPhotonDonsomhong(float $lat, float $lon, array $options = []): ?array
     {
         $params = array_merge([
             'lat' => $lat,
@@ -122,10 +159,17 @@ class AddressFromCoordinatesService
                 $data = $response->json();
                 if (! empty($data['features'])) {
                     $properties = $data['features'][0]['properties'];
-                    $keys = ['name', 'street', 'city', 'district', 'county', 'state', 'country', 'postcode'];
-                    $addressParts = array_filter(array_map(fn ($key) => $properties[$key] ?? null, $keys), fn ($val) => ! empty($val));
 
-                    return implode(', ', $addressParts);
+                    return [
+                        'name' => $properties['name'] ?? null,
+                        'street' => $properties['street'] ?? null,
+                        'city' => $properties['city'] ?? null,
+                        'district' => $properties['district'] ?? null,
+                        'county' => $properties['county'] ?? null,
+                        'state' => $properties['state'] ?? null,
+                        'country' => $properties['country'] ?? null,
+                        'postcode' => $properties['postcode'] ?? null,
+                    ];
                 }
             }
 
@@ -135,7 +179,7 @@ class AddressFromCoordinatesService
         }
     }
 
-    private function getAddressFromPhotonMarsmathis(float $lat, float $lon, array $options = []): ?string
+    private function getAddressFromPhotonMarsmathis(float $lat, float $lon, array $options = []): ?array
     {
         $params = array_merge([
             'lat' => $lat,
@@ -149,10 +193,17 @@ class AddressFromCoordinatesService
                 $data = $response->json();
                 if (! empty($data['features'])) {
                     $properties = $data['features'][0]['properties'];
-                    $keys = ['name', 'street', 'city', 'district', 'county', 'state', 'country', 'postcode'];
-                    $addressParts = array_filter(array_map(fn ($key) => $properties[$key] ?? null, $keys), fn ($val) => ! empty($val));
 
-                    return implode(', ', $addressParts);
+                    return [
+                        'name' => $properties['name'] ?? null,
+                        'street' => $properties['street'] ?? null,
+                        'city' => $properties['city'] ?? null,
+                        'district' => $properties['district'] ?? null,
+                        'county' => $properties['county'] ?? null,
+                        'state' => $properties['state'] ?? null,
+                        'country' => $properties['country'] ?? null,
+                        'postcode' => $properties['postcode'] ?? null,
+                    ];
                 }
             }
 
@@ -162,7 +213,7 @@ class AddressFromCoordinatesService
         }
     }
 
-    private function getAddressFromPhotonKllswitch(float $lat, float $lon, array $options = []): ?string
+    private function getAddressFromPhotonKllswitch(float $lat, float $lon, array $options = []): ?array
     {
         $params = array_merge([
             'lat' => $lat,
@@ -176,10 +227,17 @@ class AddressFromCoordinatesService
                 $data = $response->json();
                 if (! empty($data['features'])) {
                     $properties = $data['features'][0]['properties'];
-                    $keys = ['name', 'street', 'city', 'district', 'county', 'state', 'country', 'postcode'];
-                    $addressParts = array_filter(array_map(fn ($key) => $properties[$key] ?? null, $keys), fn ($val) => ! empty($val));
 
-                    return implode(', ', $addressParts);
+                    return [
+                        'name' => $properties['name'] ?? null,
+                        'street' => $properties['street'] ?? null,
+                        'city' => $properties['city'] ?? null,
+                        'district' => $properties['district'] ?? null,
+                        'county' => $properties['county'] ?? null,
+                        'state' => $properties['state'] ?? null,
+                        'country' => $properties['country'] ?? null,
+                        'postcode' => $properties['postcode'] ?? null,
+                    ];
                 }
             }
 
@@ -189,7 +247,7 @@ class AddressFromCoordinatesService
         }
     }
 
-    private function getAddressFromGeocodeXYZ(float $lat, float $lon, array $options = []): ?string
+    private function getAddressFromGeocodeXYZ(float $lat, float $lon, array $options = []): ?array
     {
         $url = self::GEOCODE_XYZ_BASE_URL."/{$lat},{$lon}?geoit=json";
 
@@ -198,15 +256,17 @@ class AddressFromCoordinatesService
 
             if ($response->successful()) {
                 $data = $response->json();
-                $addressParts = array_filter([
-                    $data['staddress'] ?? null,
-                    $data['city'] ?? null,
-                    $data['region'] ?? null,
-                    $data['postal'] ?? null,
-                    $data['countryname'] ?? null,
-                ], fn ($val) => ! empty($val));
 
-                return implode(', ', $addressParts);
+                return [
+                    'street' => $data['staddress'] ?? null,
+                    'city' => $data['city'] ?? null,
+                    'district' => $data['adminareas']['admin8']['name'] ?? null,
+                    'county' => $data['adminareas']['admin6']['name'] ?? null,
+                    'region' => $data['region'] ?? null,
+                    'state' => $data['state'] ?? null,
+                    'country' => $data['countryname'] ?? null,
+                    'postcode' => $data['postal'] ?? null,
+                ];
             }
 
             return null;
@@ -215,7 +275,7 @@ class AddressFromCoordinatesService
         }
     }
 
-    private function getAddressFromBigdatacloud(float $lat, float $lon, array $options = []): ?string
+    private function getAddressFromBigdatacloud(float $lat, float $lon, array $options = []): ?array
     {
         $params = array_merge([
             'latitude' => $lat,
@@ -228,15 +288,14 @@ class AddressFromCoordinatesService
 
             if ($response->successful()) {
                 $data = $response->json();
-                $addressParts = array_filter([
-                    $data['locality'] ?? null,
-                    $data['city'] ?? null,
-                    $data['principalSubdivision'] ?? null,
-                    $data['countryName'] ?? null,
-                    $data['postcode'] ?? null,
-                ], fn ($val) => ! empty($val));
 
-                return implode(', ', $addressParts);
+                return [
+                    'locality' => $data['locality'] ?? null,
+                    'city' => $data['city'] ?? null,
+                    'principal_subdivision' => $data['principalSubdivision'] ?? null,
+                    'country' => $data['countryName'] ?? null,
+                    'postcode' => $data['postcode'] ?? null,
+                ];
             }
 
             return null;
