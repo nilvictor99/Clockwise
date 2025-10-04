@@ -4,6 +4,7 @@ namespace App\Repositories\Models;
 
 use App\Models\Timesheet;
 use App\Services\Models\UserService;
+use App\Services\Utils\AddressFromCoordinatesService;
 use App\Services\Utils\LocationIpService;
 use App\Services\Utils\QrGeneratorService;
 use Carbon\Carbon;
@@ -14,13 +15,19 @@ class TimesheetRepository extends BaseRepository
 
     private $userService;
 
+    private $locationIpService;
+
+    private $addressFromCoordinatesService;
+
     const RELATIONS = [];
 
-    public function __construct(Timesheet $model, QrGeneratorService $qrGeneratorService, UserService $userService)
+    public function __construct(Timesheet $model, QrGeneratorService $qrGeneratorService, UserService $userService, LocationIpService $locationIpService, AddressFromCoordinatesService $addressFromCoordinatesService)
     {
         parent::__construct($model, self::RELATIONS);
         $this->qrGeneratorService = $qrGeneratorService;
         $this->userService = $userService;
+        $this->locationIpService = $locationIpService;
+        $this->addressFromCoordinatesService = $addressFromCoordinatesService;
     }
 
     public function getModel($search = null, $startDate = null, $endDate = null, $staffId = null, $perPage = 5)
@@ -98,7 +105,14 @@ class TimesheetRepository extends BaseRepository
         $currentDate = Carbon::now()->toDateString();
         $currentTime = Carbon::now()->toTimeString();
         $newType = $data['type'] ?? 'work';
-        $location = $this->getLocationFromIp();
+        $coordinates = $this->getLocationFromIp();
+        $latitude = $coordinates['latitude'] ?? null;
+        $longitude = $coordinates['longitude'] ?? null;
+        $location = null;
+
+        if ($latitude && $longitude) {
+            $location = $this->addressFromCoordinatesService->getAddressFast($latitude, $longitude);
+        }
 
         if ($userId == $staffId) {
             $authUser = $this->userService->getAuthUser();
@@ -113,14 +127,14 @@ class TimesheetRepository extends BaseRepository
             'currentDate' => $currentDate,
             'currentTime' => $currentTime,
             'newType' => $newType,
+            'coordinates' => $coordinates,
             'location' => $location,
         ];
     }
 
     private function getLocationFromIp(): array
     {
-        $locationService = app(LocationIpService::class);
-        $coordinates = $locationService->getCoordinates();
+        $coordinates = $this->locationIpService->getCoordinates();
 
         return [
             'latitude' => $coordinates['latitude'] ?? null,
@@ -136,12 +150,13 @@ class TimesheetRepository extends BaseRepository
         $currentDate = $prepared['currentDate'];
         $currentTime = $prepared['currentTime'];
         $newType = $prepared['newType'];
-        $location = json_encode($prepared['location']);
+        $coordinates = json_encode($prepared['coordinates']);
+        $location = $prepared['location'];
 
         $openTimesheet = $this->model->findOpenByType($staffId, $currentDate, $newType)->first();
 
         if ($openTimesheet) {
-            return $this->closeTimesheet($openTimesheet, $currentDate, $currentTime, $location);
+            return $this->closeTimesheet($openTimesheet, $currentDate, $currentTime, $coordinates, $location);
         }
 
         return $this->createNewTimesheet(
@@ -150,11 +165,12 @@ class TimesheetRepository extends BaseRepository
             $currentDate,
             $currentTime,
             $newType,
+            $coordinates,
             $location
         );
     }
 
-    private function closeTimesheet(Timesheet $timesheet, string $currentDate, string $currentTime, string $location): Timesheet
+    private function closeTimesheet(Timesheet $timesheet, string $currentDate, string $currentTime, string $coordinates, $location = null): Timesheet
     {
         $dayOut = $currentDate.' '.$currentTime;
         $hoursTime = $this->formatHoursToTime($timesheet->day_in.','.$dayOut);
@@ -162,6 +178,7 @@ class TimesheetRepository extends BaseRepository
         $timesheet->update([
             'day_out' => $dayOut,
             'hours' => $hoursTime,
+            'coordinates' => $coordinates,
             'location' => $location,
         ]);
 
@@ -174,6 +191,7 @@ class TimesheetRepository extends BaseRepository
         string $currentDate,
         string $currentTime,
         string $type,
+        string $coordinates,
         string $location
     ): Timesheet {
         return $this->model->create([
@@ -184,6 +202,7 @@ class TimesheetRepository extends BaseRepository
             'day_out' => null,
             'hours' => null,
             'type' => $type,
+            'coordinates' => $coordinates,
             'location' => $location,
         ]);
     }

@@ -20,7 +20,8 @@ return new class extends Migration
             $table->dateTime('day_in')->nullable();
             $table->dateTime('day_out')->nullable();
             $table->time('hours')->nullable();
-            $table->json('location')->nullable();
+            $table->jsonb('coordinates')->nullable();
+            $table->text('location')->nullable();
             $table->timestamps();
         });
     }

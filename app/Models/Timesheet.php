@@ -18,13 +18,14 @@ class Timesheet extends Model
         'day_in',
         'day_out',
         'hours',
+        'coordinates',
         'location',
     ];
 
     protected $casts = [
         'day_in' => 'datetime',
         'day_out' => 'datetime',
-        'location' => 'array',
+        'coordinates' => 'array',
     ];
 
     public function staff()
